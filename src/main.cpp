@@ -27,7 +27,7 @@ void main() {
 const unsigned int SCREEN_WIDTH{500};
 const unsigned int SCREEN_HEIGHT{500};
 
-int main() {
+auto main() -> int {
   glfwInit();
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -35,27 +35,31 @@ int main() {
 
   GLFWwindow *window{glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT,
                                       "Hello OpenGL World!", nullptr, nullptr)};
-  if (!window) {
-    std::cout << "Failed to create GLFW window" << std::endl;
+  if (window == nullptr) {
+    std::cout << "Failed to create GLFW window" << '\n';
     glfwTerminate();
     return -1;
   }
   glfwMakeContextCurrent(window);
   glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-  auto success{!gladLoadGL((GLADloadfunc)(glfwGetProcAddress))};
+  auto success{gladLoadGL((GLADloadfunc)(glfwGetProcAddress)) == 0};
 
   if (success) {
-    std::cout << "Failed to initialize GLAD" << std::endl;
+    std::cout << "Failed to initialize GLAD" << '\n';
     return -1;
   }
 
-  std::cout << "Vendor\t:" << glGetString(GL_VENDOR) << std::endl;
-  std::cout << "Renderer\t:" << glGetString(GL_RENDERER) << std::endl;
-  std::cout << "Version\t:" << glGetString(GL_VERSION) << std::endl;
+  std::cout << "Vendor\t:" << glGetString(GL_VENDOR) << '\n';
+  std::cout << "Renderer\t:" << glGetString(GL_RENDERER) << '\n';
+  std::cout << "Version\t:" << glGetString(GL_VERSION) << '\n';
 
-  while (!glfwWindowShouldClose(window)) {
+  while (glfwWindowShouldClose(window) == 0) {
     processInput(window);
-    glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+    const float red_val{0.2F};
+    const float green_val{0.3F};
+    const float blue_val{0.3F};
+    const float alpha_val{1.0F};
+    glClearColor(red_val, green_val, blue_val, alpha_val);
     glClear(GL_COLOR_BUFFER_BIT);
     glfwSwapBuffers(window);
     glfwPollEvents();
@@ -67,12 +71,12 @@ int main() {
 
 void processInput(GLFWwindow *window) {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-    glfwSetWindowShouldClose(window, true);
+    glfwSetWindowShouldClose(window, 1);
   }
 }
 
 void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
-  if (!window) {
+  if (window == nullptr) {
     return;
   }
   glViewport(0, 0, width, height);

@@ -1,12 +1,24 @@
+InlayHints:
+  Enabled: true
+
 CompileFlags:
-  CompilationDatabase: build
+  CompilationDatabase: build/debug
   Add:
     - -Wall
     - -Wextra
     - -Wpedantic
+    - -Werror
+    - -Wconversion
+    - -Wsign-conversion
+    - -Wshadow
+    - -Wformat=2
+    - -Wundef
 
 Diagnostics:
   UnusedIncludes: Strict
-
-InlayHints:
-  Enabled: true
+  ClangTidy:
+    Add:
+      - bugprone-*
+      - performance-*
+      - readability-*
+      - modernize-*
