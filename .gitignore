@@ -1,0 +1,39 @@
+# Build directories
+/build/
+/out/
+/dist/
+
+# CMake generated files
+/CMakeCache.txt
+/CMakeFiles/
+/cmake_install.cmake
+/install_manifest.txt
+/CTestTestfile.cmake
+/Testing/
+/compile_commands.json
+/CMakeUserPresets.json
+
+# Ninja generated files
+/.ninja_deps
+/.ninja_log
+/build.ninja
+
+# Binaries and debug symbols generated outside build/
+*.exe
+*.dll
+*.lib
+*.a
+*.obj
+*.o
+*.pdb
+*.ilk
+
+# Editor / IDE local files
+/.vscode/
+/.idea/
+*.swp
+*.swo
+
+# OS noise
+.DS_Store
+Thumbs.db
