@@ -33,8 +33,8 @@ auto main() -> int {
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-  GLFWwindow *window{glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT,
-                                      "Hello OpenGL World!", nullptr, nullptr)};
+  auto *window{glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT,
+                                      "Hi from prerit714", nullptr, nullptr)};
   if (window == nullptr) {
     std::cout << "Failed to create GLFW window" << '\n';
     glfwTerminate();
