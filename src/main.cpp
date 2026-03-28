@@ -32,7 +32,7 @@ auto main() -> int {
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-  auto *window{glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Hello Triangle!",
+  auto *window{glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Hello Two Triangles",
                                 nullptr, nullptr)};
   if (window == nullptr) {
     std::cout << "Failed to create GLFW window" << '\n';
@@ -73,7 +73,7 @@ auto main() -> int {
    * Declraing fragment shader
    * */
   auto fragment_shader{glCreateShader(GL_FRAGMENT_SHADER)};
-  glShaderSource(fragment_shader, 1, &fragment_shader_source, &success);
+  glShaderSource(fragment_shader, 1, &fragment_shader_source, nullptr);
   glCompileShader(fragment_shader);
   glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
 
@@ -113,8 +113,11 @@ auto main() -> int {
       -0.5F, 0.5F,  0.0F, // top left
   };
 
+
+  constexpr int NUMBER_OF_INDICES{6};
+
   // NOTE: we start from 0!
-  unsigned int indices[] = {
+  unsigned int indices[NUMBER_OF_INDICES] = {
       0, 1, 3, // first triangle
       1, 2, 3, // second triangle
   };
@@ -157,7 +160,7 @@ auto main() -> int {
   glBindVertexArray(0);
 
   // WARN: uncomment this call to draw in wireframe polygons.
-  // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
   while (glfwWindowShouldClose(window) == 0) {
     // input
@@ -171,11 +174,12 @@ auto main() -> int {
     glClearColor(red_val, green_val, blue_val, alpha_val);
     glClear(GL_COLOR_BUFFER_BIT);
 
+
     // draw our first triangle
     glUseProgram(shader_program);
     glBindVertexArray(VAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
     // glDrawArrays(GL_TRIANGLES, 0, 6);
-    glDrawElements(GL_TRIANGLES, sizeof(indices), GL_UNSIGNED_INT, nullptr);
+    glDrawElements(GL_TRIANGLES, NUMBER_OF_INDICES, GL_UNSIGNED_INT, nullptr);
     // glBindVertexArray(0); // INFO: No need to unbind it everytime
 
     // swap buffers + poll IO
