@@ -1,11 +1,13 @@
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
+#include <cmath>
 
-void framebuffer_size_callback(GLFWwindow *window, int width, int height);
-void processInput(GLFWwindow *window);
+const unsigned int SCREEN_WIDTH{800};
+const unsigned int SCREEN_HEIGHT{800};
+const char *SCREEN_TITLE{"2026-03-29"};
 
-const char *vertex_shader_source{R"(
+const char *vertexShaderSource{R"(
 #version 330 core
 // the position variable has attribute position 0
 layout (location = 0) in vec3 aPos;
@@ -21,24 +23,40 @@ void main() {
 }
 )"};
 
-const char *fragment_shader_source{R"(
+const char *fragmentShaderSource{R"(
 #version 330 core
 out vec4 FragColor;
 
-// the input variable from the vertex shader
-// with the same name and same dimentions
-in vec4 vertexColor;
+// we set this variable in the OpenGL code
+uniform vec4 ourColor;
 
 void main() {
-  FragColor = vertexColor;
+  FragColor = ourColor;
 }
 )"};
 
-const unsigned int SCREEN_WIDTH{800};
-const unsigned int SCREEN_HEIGHT{800};
-const char *SCREEN_TITLE{"2026-03-29"};
+void processInput(GLFWwindow *window) {
+  if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
+    glfwSetWindowShouldClose(window, 1);
+  }
+}
+
+void framebufferSizecallback(GLFWwindow *window, int width, int height) {
+  if (window == nullptr) {
+    return;
+  }
+  glViewport(0, 0, width, height);
+}
+
+namespace utils {
+void PrintGlfwGetTime() {
+  auto currentTime{glfwGetTime()};
+  std::cout << currentTime << '\n';
+}
+} // namespace utils
 
 auto main() -> int {
+  utils::PrintGlfwGetTime();
   glfwInit();
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -52,7 +70,7 @@ auto main() -> int {
     return -1;
   }
   glfwMakeContextCurrent(window);
-  glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+  glfwSetFramebufferSizeCallback(window, framebufferSizecallback);
   auto gladInitSuccess{gladLoadGL((GLADloadfunc)(glfwGetProcAddress)) == 0};
 
   if (gladInitSuccess) {
@@ -60,6 +78,7 @@ auto main() -> int {
     return -1;
   }
 
+  utils::PrintGlfwGetTime();
   std::cout << "Vendor\t:" << glGetString(GL_VENDOR) << '\n';
   std::cout << "Renderer\t:" << glGetString(GL_RENDERER) << '\n';
   std::cout << "Version\t:" << glGetString(GL_VERSION) << '\n';
@@ -67,157 +86,126 @@ auto main() -> int {
   /**
    * Declraing vertex shader
    * */
-  auto vertex_shader{glCreateShader(GL_VERTEX_SHADER)};
-  glShaderSource(vertex_shader, 1, &vertex_shader_source, nullptr);
-  glCompileShader(vertex_shader);
+  auto vertexShader{glCreateShader(GL_VERTEX_SHADER)};
+  glShaderSource(vertexShader, 1, &vertexShaderSource, nullptr);
+  glCompileShader(vertexShader);
 
   constexpr int INFO_LOG_SIZE{512};
   int success{};
   char info_log[INFO_LOG_SIZE];
-  glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &success);
+  glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
 
   if (success == 0) {
-    glGetShaderInfoLog(vertex_shader, INFO_LOG_SIZE, nullptr, info_log);
+    glGetShaderInfoLog(vertexShader, INFO_LOG_SIZE, nullptr, info_log);
     std::cout << "Error: Compiling vertex shader failed" << info_log << '\n';
   }
 
   /**
    * Declraing fragment shader
    * */
-  auto fragment_shader{glCreateShader(GL_FRAGMENT_SHADER)};
-  glShaderSource(fragment_shader, 1, &fragment_shader_source, nullptr);
-  glCompileShader(fragment_shader);
-  glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &success);
+  auto fragmentShader{glCreateShader(GL_FRAGMENT_SHADER)};
+  glShaderSource(fragmentShader, 1, &fragmentShaderSource, nullptr);
+  glCompileShader(fragmentShader);
+  glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
 
   if (success == 0) {
-    glGetShaderInfoLog(fragment_shader, INFO_LOG_SIZE, nullptr, info_log);
+    glGetShaderInfoLog(fragmentShader, INFO_LOG_SIZE, nullptr, info_log);
     std::cout << "Error: Compiling fragment shader failed" << info_log << '\n';
   }
 
   /**
    * INFO: Link shaders
    * */
-  auto shader_program{glCreateProgram()};
-  glAttachShader(shader_program, vertex_shader);
-  glAttachShader(shader_program, fragment_shader);
-  glLinkProgram(shader_program);
+  auto shaderProgram{glCreateProgram()};
+  glAttachShader(shaderProgram, vertexShader);
+  glAttachShader(shaderProgram, fragmentShader);
+  glLinkProgram(shaderProgram);
 
-  glGetProgramiv(shader_program, GL_LINK_STATUS, &success);
+  glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
   if (success == 0) {
-    glGetProgramInfoLog(shader_program, INFO_LOG_SIZE, nullptr, info_log);
+    glGetProgramInfoLog(shaderProgram, INFO_LOG_SIZE, nullptr, info_log);
     std::cout << "Error: Linking Failed" << info_log << '\n';
   }
+
+  utils::PrintGlfwGetTime();
 
   /**
    * WARN: Must delete compiled shaders
    * */
-  glDeleteShader(vertex_shader);
-  glDeleteShader(fragment_shader);
+  glDeleteShader(vertexShader);
+  glDeleteShader(fragmentShader);
 
   /**
    * Define vertex data
    * */
-
   const float vertices[] = {
-      0.5F,  0.5F,  0.0F, // top right
       0.5F,  -0.5F, 0.0F, // bottom right
       -0.5F, -0.5F, 0.0F, // bottom left
-      -0.5F, 0.5F,  0.0F, // top left
-  };
-
-  constexpr int NUMBER_OF_INDICES{6};
-
-  // NOTE: we start from 0!
-  unsigned int indices[NUMBER_OF_INDICES] = {
-      0, 1, 3, // first triangle
-      1, 2, 3, // second triangle
+      0.0F,  0.5F,  0.0F, // top
   };
 
   unsigned int VBO{};
   unsigned int VAO{};
-  unsigned int EBO{};
 
   glGenVertexArrays(1, &VAO);
   glGenBuffers(1, &VBO);
-  glGenBuffers(1, &EBO);
 
-  // NOTE: bind the VAO first, then bind and set VBOs
+  // bind the Vertex Array Object first, then bind and set vertex buffer(s)
+  // and then configure vertex attributes
   glBindVertexArray(VAO);
-
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
   glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices,
-               GL_STATIC_DRAW);
   glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
                         static_cast<void *>(nullptr));
   glEnableVertexAttribArray(0);
 
-  // WARN: note that this is allowed, the call toglVertexAttribPointer
-  // registered VBO as the vertex attribute's bound vertex buffer object so
-  // afterwards we can safely unbind
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-  // WARN: remember: do NOT unbind the EBO while a VAO is active as the bound
-  // element buffer object IS stored in the VAO; keep the EBO bound.
-  // glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0); // WARN: This should be always be
-  // a comment
-
-  // WARN: You can unbind the VAO afterwards so other VAO calls won't
-  // accidentally modify this VAO, but this rarely happens. Modifying other
-  // VAOs requires a call toglBindVertexArray anyways so we generally don't
-  // unbind VAOs (nor VBOs) when it's not directly necessary.
-  glBindVertexArray(0);
-
-  // WARN: uncomment this call to draw in wireframe polygons.
-  // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+  // glBindVertexArray(0); // WARN: unbind call
+  glBindVertexArray(VAO);
+  // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); // WARN: Polygon mode
 
   while (glfwWindowShouldClose(window) == 0) {
-    // input
+    // NOTE: input
     processInput(window);
 
-    // rendrer
+    // NOTE: rendrer
     const float red_val{0.2F};
     const float green_val{0.3F};
     const float blue_val{0.3F};
     const float alpha_val{1.0F};
+
+    // NOTE: clear the colorbuffer
     glClearColor(red_val, green_val, blue_val, alpha_val);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    // draw our first triangle
-    glUseProgram(shader_program);
-    glBindVertexArray(
-        VAO); // seeing as we only have a single VAO there's no need to bind it
-              // every time, but we'll do so to keep things a bit more organized
-    // glDrawArrays(GL_TRIANGLES, 0, 6);
-    glDrawElements(GL_TRIANGLES, NUMBER_OF_INDICES, GL_UNSIGNED_INT, nullptr);
-    // glBindVertexArray(0); // INFO: No need to unbind it everytime
+    // WARN: draw our first triangle, be sure to activate the shader
+    glUseProgram(shaderProgram);
 
-    // swap buffers + poll IO
+    // NOTE: swap buffers + poll IO events
+
+    double timeValue{glfwGetTime()};
+    const float divisor{2.0};
+    const float sigma{0.5};
+    float greenValue{static_cast<float>((cos(timeValue) / divisor) + sigma)};
+    int vertexColorLocation{glGetUniformLocation(shaderProgram, "ourColor")};
+
+    if (vertexColorLocation == -1) {
+      std::cout << "ERROR: glGetUniformLocation did not find ourColor" << '\n';
+    }
+
+    glUniform4f(vertexColorLocation, 0.0F, greenValue, 0.0F, 1.0F);
+
+    // NOTE: render the triangle
+    glDrawArrays(GL_TRIANGLES, 0, 3);
+
     glfwSwapBuffers(window);
     glfwPollEvents();
   }
 
-  // de-allocate all resources
+  // WARN: de-allocate all resources
   glDeleteVertexArrays(1, &VAO);
   glDeleteBuffers(1, &VBO);
-  glDeleteBuffers(1, &EBO);
-  glDeleteProgram(shader_program);
+  glDeleteProgram(shaderProgram);
 
   glfwTerminate();
   return 0;
-}
-
-void processInput(GLFWwindow *window) {
-  if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
-    glfwSetWindowShouldClose(window, 1);
-  }
-}
-
-void framebuffer_size_callback(GLFWwindow *window, int width, int height) {
-  if (window == nullptr) {
-    return;
-  }
-  glViewport(0, 0, width, height);
 }
