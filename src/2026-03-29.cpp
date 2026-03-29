@@ -7,10 +7,17 @@ void processInput(GLFWwindow *window);
 
 const char *vertex_shader_source{R"(
 #version 330 core
+// the position variable has attribute position 0
 layout (location = 0) in vec3 aPos;
 
+// specify a color output to the vertex shader
+out vec4 vertexColor;
+
 void main() {
-  gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
+  gl_Position = vec4(aPos, 1.0);
+
+  // set the output variable to a dark red color
+  vertexColor = vec4(1.0, 1.0, 0.0, 1.0);
 }
 )"};
 
@@ -18,13 +25,18 @@ const char *fragment_shader_source{R"(
 #version 330 core
 out vec4 FragColor;
 
+// the input variable from the vertex shader
+// with the same name and same dimentions
+in vec4 vertexColor;
+
 void main() {
-  FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);
+  FragColor = vertexColor;
 }
 )"};
 
 const unsigned int SCREEN_WIDTH{800};
 const unsigned int SCREEN_HEIGHT{800};
+const char *SCREEN_TITLE{"2026-03-29"};
 
 auto main() -> int {
   glfwInit();
@@ -32,7 +44,7 @@ auto main() -> int {
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-  auto *window{glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Hello Two Triangles",
+  auto *window{glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_TITLE,
                                 nullptr, nullptr)};
   if (window == nullptr) {
     std::cout << "Failed to create GLFW window" << '\n';
@@ -48,12 +60,9 @@ auto main() -> int {
     return -1;
   }
 
-  std::cout << "Vendor: " << glGetString(GL_VENDOR) << '\n';
-  std::cout << "Renderer: " << glGetString(GL_RENDERER) << '\n';
-  std::cout << "Version: " << glGetString(GL_VERSION) << '\n';
-  int number_of_attributes{};
-  glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &number_of_attributes);
-  std::cout << "Max number of attributes allowed: " << number_of_attributes << '\n';
+  std::cout << "Vendor\t:" << glGetString(GL_VENDOR) << '\n';
+  std::cout << "Renderer\t:" << glGetString(GL_RENDERER) << '\n';
+  std::cout << "Version\t:" << glGetString(GL_VERSION) << '\n';
 
   /**
    * Declraing vertex shader
@@ -116,7 +125,6 @@ auto main() -> int {
       -0.5F, 0.5F,  0.0F, // top left
   };
 
-
   constexpr int NUMBER_OF_INDICES{6};
 
   // NOTE: we start from 0!
@@ -163,7 +171,7 @@ auto main() -> int {
   glBindVertexArray(0);
 
   // WARN: uncomment this call to draw in wireframe polygons.
-  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+  // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
   while (glfwWindowShouldClose(window) == 0) {
     // input
@@ -177,10 +185,11 @@ auto main() -> int {
     glClearColor(red_val, green_val, blue_val, alpha_val);
     glClear(GL_COLOR_BUFFER_BIT);
 
-
     // draw our first triangle
     glUseProgram(shader_program);
-    glBindVertexArray(VAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
+    glBindVertexArray(
+        VAO); // seeing as we only have a single VAO there's no need to bind it
+              // every time, but we'll do so to keep things a bit more organized
     // glDrawArrays(GL_TRIANGLES, 0, 6);
     glDrawElements(GL_TRIANGLES, NUMBER_OF_INDICES, GL_UNSIGNED_INT, nullptr);
     // glBindVertexArray(0); // INFO: No need to unbind it everytime
