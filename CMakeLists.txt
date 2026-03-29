@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 3.20)
 
+set(FILENAME 2026-03-29)
+
 project(opengl_hello
   VERSION 0.1.0
   LANGUAGES C CXX
@@ -27,9 +29,10 @@ target_include_directories(glad
     "${CMAKE_CURRENT_SOURCE_DIR}/third_party/glad/include"
 )
 
+
 # Main executable
 add_executable(opengl_hello
-  src/main.cpp
+  "src/${FILENAME}.cpp"
 )
 
 target_link_libraries(opengl_hello
