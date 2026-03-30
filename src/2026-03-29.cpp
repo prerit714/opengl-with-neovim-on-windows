@@ -1,7 +1,7 @@
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
-#include <cmath>
+#include <cstdint>
 
 const unsigned int SCREEN_WIDTH{800};
 const unsigned int SCREEN_HEIGHT{800};
@@ -12,51 +12,45 @@ const char *vertexShaderSource{R"(
 // the position variable has attribute position 0
 layout (location = 0) in vec3 aPos;
 
-// specify a color output to the vertex shader
-out vec4 vertexColor;
+// the color variable has attribute position 1
+layout (location = 1) in vec3 aColor;
+
+// specify a color output to the fragment shader
+out vec3 ourColor;
 
 void main() {
   gl_Position = vec4(aPos, 1.0);
 
-  // set the output variable to a dark red color
-  vertexColor = vec4(1.0, 1.0, 0.0, 1.0);
+  // set ourColor to the input color we got from vertex data
+  ourColor = aColor;
 }
 )"};
 
 const char *fragmentShaderSource{R"(
 #version 330 core
 out vec4 FragColor;
-
-// we set this variable in the OpenGL code
-uniform vec4 ourColor;
+in vec3 ourColor;
 
 void main() {
-  FragColor = ourColor;
+  FragColor = vec4(ourColor, 1.0);
 }
 )"};
 
-void processInput(GLFWwindow *window) {
+auto processInput(GLFWwindow *window) -> void {
   if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) {
     glfwSetWindowShouldClose(window, 1);
   }
 }
 
-void framebufferSizecallback(GLFWwindow *window, int width, int height) {
+auto framebufferSizecallback(GLFWwindow *window, int width, int height)
+    -> void {
   if (window == nullptr) {
     return;
   }
   glViewport(0, 0, width, height);
 }
 
-namespace utils {
-void PrintGlfwGetTime() {
-  auto currentTime{glfwGetTime()};
-  std::cout << currentTime << '\n';
-}
-} // namespace utils
-
 auto main() -> int {
-  utils::PrintGlfwGetTime();
   glfwInit();
   glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -127,8 +121,6 @@ auto main() -> int {
     std::cout << "Error: Linking Failed" << info_log << '\n';
   }
 
-  utils::PrintGlfwGetTime();
-
   /**
    * WARN: Must delete compiled shaders
    * */
@@ -139,9 +131,10 @@ auto main() -> int {
    * Define vertex data
    * */
   const float vertices[] = {
-      0.5F,  -0.5F, 0.0F, // bottom right
-      -0.5F, -0.5F, 0.0F, // bottom left
-      0.0F,  0.5F,  0.0F, // top
+      // positions         // colors
+      0.5F,  -0.5F, 0.0F, 1.0F, 0.0F, 0.0F, // bottom right
+      -0.5F, -0.5F, 0.0F, 0.0F, 1.0F, 0.0F, // bottom leFt
+      0.0F,  0.5F,  0.0F, 0.0F, 0.0F, 1.0F  // top
   };
 
   unsigned int VBO{};
@@ -155,9 +148,18 @@ auto main() -> int {
   glBindVertexArray(VAO);
   glBindBuffer(GL_ARRAY_BUFFER, VBO);
   glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float),
+
+  // position attribute
+  constexpr int STRIDE_NUMBER{6};
+  glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, STRIDE_NUMBER * sizeof(float),
                         static_cast<void *>(nullptr));
   glEnableVertexAttribArray(0);
+
+  // color attribute
+  glVertexAttribPointer(
+      1, 3, GL_FLOAT, GL_FALSE, STRIDE_NUMBER * sizeof(float),
+      reinterpret_cast<void *>(static_cast<std::uintptr_t>(3 * sizeof(float))));
+  glEnableVertexAttribArray(1);
 
   // glBindVertexArray(0); // WARN: unbind call
   glBindVertexArray(VAO);
@@ -168,10 +170,10 @@ auto main() -> int {
     processInput(window);
 
     // NOTE: rendrer
-    const float red_val{0.2F};
-    const float green_val{0.3F};
-    const float blue_val{0.3F};
-    const float alpha_val{1.0F};
+    const auto red_val{0.2F};
+    const auto green_val{0.3F};
+    const auto blue_val{0.3F};
+    const auto alpha_val{1.0F};
 
     // NOTE: clear the colorbuffer
     glClearColor(red_val, green_val, blue_val, alpha_val);
@@ -180,23 +182,10 @@ auto main() -> int {
     // WARN: draw our first triangle, be sure to activate the shader
     glUseProgram(shaderProgram);
 
-    // NOTE: swap buffers + poll IO events
-
-    double timeValue{glfwGetTime()};
-    const float divisor{2.0};
-    const float sigma{0.5};
-    float greenValue{static_cast<float>((cos(timeValue) / divisor) + sigma)};
-    int vertexColorLocation{glGetUniformLocation(shaderProgram, "ourColor")};
-
-    if (vertexColorLocation == -1) {
-      std::cout << "ERROR: glGetUniformLocation did not find ourColor" << '\n';
-    }
-
-    glUniform4f(vertexColorLocation, 0.0F, greenValue, 0.0F, 1.0F);
-
     // NOTE: render the triangle
     glDrawArrays(GL_TRIANGLES, 0, 3);
 
+    // NOTE: swap buffers + poll IO events
     glfwSwapBuffers(window);
     glfwPollEvents();
   }
