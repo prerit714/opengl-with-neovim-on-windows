@@ -1,8 +1,9 @@
 cmake_minimum_required(VERSION 3.20)
 
 set(FILENAME 2026-03-29)
+set(EXECUTABLE_NAME "opengl_hello")
 
-project(opengl_hello
+project(${EXECUTABLE_NAME}
   VERSION 0.1.0
   LANGUAGES C CXX
 )
@@ -31,18 +32,27 @@ target_include_directories(glad
 
 
 # Main executable
-add_executable(opengl_hello
+add_executable(${EXECUTABLE_NAME}
   "src/${FILENAME}.cpp"
 )
 
-target_link_libraries(opengl_hello
+add_custom_command(
+  TARGET ${EXECUTABLE_NAME}
+  POST_BUILD
+  COMMAND
+    ${CMAKE_COMMAND} -E copy_directory
+    "${CMAKE_CURRENT_SOURCE_DIR}/shaders"
+    "$<TARGET_FILE_DIR:${EXECUTABLE_NAME}>/shaders"
+)
+
+target_link_libraries(${EXECUTABLE_NAME}
   PRIVATE
     glad
     glfw
     opengl32
 )
 
-target_compile_options(opengl_hello
+target_compile_options(${EXECUTABLE_NAME}
   PRIVATE
     -Wall
     -Wextra
@@ -50,9 +60,9 @@ target_compile_options(opengl_hello
 )
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  target_compile_options(opengl_hello PRIVATE -O0 -g3)
+  target_compile_options(${EXECUTABLE_NAME} PRIVATE -O0 -g3)
 endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Release")
-  target_compile_options(opengl_hello PRIVATE -O3 -DNDEBUG)
+  target_compile_options(${EXECUTABLE_NAME} PRIVATE -O3 -DNDEBUG)
 endif()
