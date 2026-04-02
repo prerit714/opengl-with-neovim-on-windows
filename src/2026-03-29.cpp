@@ -1,20 +1,22 @@
 #include <glad/gl.h>
 #include <GLFW/glfw3.h>
+
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <array>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 
-const unsigned int SCREEN_WIDTH{800};
-const unsigned int SCREEN_HEIGHT{800};
+constexpr int INFO_LOG_SIZE{512};
+constexpr unsigned int SCREEN_WIDTH{800};
+constexpr unsigned int SCREEN_HEIGHT{800};
 constexpr std::string SCREEN_TITLE{"2026-03-29"};
 
 const auto SHADER_DIRECTORY{std::filesystem::path{"shaders"}};
 const auto VERTEX_SHADER_PATH{SHADER_DIRECTORY / "basic.vert.glsl"};
-
 const auto FRAGMENT_SHADER_PATH{SHADER_DIRECTORY / "basic.frag.glsl"};
 
 auto loadShaderSource(const std::filesystem::path &shaderPath) -> std::string {
@@ -32,24 +34,23 @@ auto loadShaderSource(const std::filesystem::path &shaderPath) -> std::string {
 
 auto compileShader(const GLenum &shaderType,
                    const std::filesystem::path &shaderPath) -> unsigned int {
-  std::cout << "[compileShader] Complier shader called()" << '\n';
+  std::cout << "[compileShader] called with " << shaderType << '\n';
   const auto shaderSource{loadShaderSource(shaderPath)};
-  const char *shaderSourcePtr{shaderSource.c_str()};
+  const auto *shaderSourcePtr{shaderSource.c_str()};
 
   auto shader{glCreateShader(shaderType)};
   glShaderSource(shader, 1, &shaderSourcePtr, nullptr);
   glCompileShader(shader);
 
-  constexpr int INFO_LOG_SIZE{512};
   int success{};
-  char infoLog[INFO_LOG_SIZE];
+  std::array<char, INFO_LOG_SIZE> infoLog{};
   glGetShaderiv(shader, GL_COMPILE_STATUS, &success);
 
   if (success == 0) {
-    glGetShaderInfoLog(shader, INFO_LOG_SIZE, nullptr, infoLog);
-    std::ostringstream error;
+    glGetShaderInfoLog(shader, INFO_LOG_SIZE, nullptr, infoLog.data());
+    std::ostringstream error{};
     error << "Failed to compile shader '" << shaderPath.string()
-          << "': " << infoLog;
+          << "': " << infoLog.data();
     throw std::runtime_error{error.str()};
   }
 
@@ -109,13 +110,14 @@ auto main() -> int {
     glAttachShader(shaderProgram, fragmentShader);
     glLinkProgram(shaderProgram);
 
-    constexpr int INFO_LOG_SIZE{512};
     int success{};
-    char infoLog[INFO_LOG_SIZE];
+    std::array<char, INFO_LOG_SIZE> infoLog{};
+
     glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
     if (success == 0) {
-      glGetProgramInfoLog(shaderProgram, INFO_LOG_SIZE, nullptr, infoLog);
-      std::cout << "Error: Linking Failed " << infoLog << '\n';
+      glGetProgramInfoLog(shaderProgram, INFO_LOG_SIZE, nullptr,
+                          infoLog.data());
+      std::cout << "Error: Linking Failed " << infoLog.data() << '\n';
     }
 
     /**
@@ -127,7 +129,7 @@ auto main() -> int {
     /**
      * Define vertex data
      * */
-    const float vertices[] = {
+    const std::array<float, 18> vertices{
         // positions         // colors
         0.5F,  -0.5F, 0.0F, 1.0F, 0.0F, 0.0F, // bottom right
         -0.5F, -0.5F, 0.0F, 0.0F, 1.0F, 0.0F, // bottom leFt
@@ -144,7 +146,8 @@ auto main() -> int {
     // and then configure vertex attributes
     glBindVertexArray(VAO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float),
+                 vertices.data(), GL_STATIC_DRAW);
 
     // position attribute
     constexpr int STRIDE_NUMBER{6};
