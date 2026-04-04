@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.20)
 
-set(FILENAME 2026-03-29)
+set(FILENAME 2026-04-04)
 set(EXECUTABLE_NAME "opengl_hello")
 
 project(${EXECUTABLE_NAME}
@@ -25,9 +25,19 @@ add_library(glad STATIC
   third_party/glad/src/gl.c
 )
 
+# stb_image
+add_library(stb STATIC
+  src/stb_image.cpp
+)
+
 target_include_directories(glad
   PUBLIC
     "${CMAKE_CURRENT_SOURCE_DIR}/third_party/glad/include"
+)
+
+target_include_directories(stb
+  PUBLIC
+    "${CMAKE_CURRENT_SOURCE_DIR}/third_party/stb"
 )
 
 
@@ -49,6 +59,7 @@ target_link_libraries(${EXECUTABLE_NAME}
   PRIVATE
     glad
     glfw
+    stb
     opengl32
 )
 
