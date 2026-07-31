@@ -32,8 +32,8 @@ auto main() -> int {
   glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
   glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-  auto *window{glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT, "Hello Two Triangles",
-                                nullptr, nullptr)};
+  auto *window{glfwCreateWindow(SCREEN_WIDTH, SCREEN_HEIGHT,
+                                "Hello Two Triangles", nullptr, nullptr)};
   if (window == nullptr) {
     std::cout << "Failed to create GLFW window" << '\n';
     glfwTerminate();
@@ -113,7 +113,6 @@ auto main() -> int {
       -0.5F, 0.5F,  0.0F, // top left
   };
 
-
   constexpr int NUMBER_OF_INDICES{6};
 
   // NOTE: we start from 0!
@@ -174,10 +173,11 @@ auto main() -> int {
     glClearColor(red_val, green_val, blue_val, alpha_val);
     glClear(GL_COLOR_BUFFER_BIT);
 
-
     // draw our first triangle
     glUseProgram(shader_program);
-    glBindVertexArray(VAO); // seeing as we only have a single VAO there's no need to bind it every time, but we'll do so to keep things a bit more organized
+    glBindVertexArray(
+        VAO); // seeing as we only have a single VAO there's no need to bind it
+              // every time, but we'll do so to keep things a bit more organized
     // glDrawArrays(GL_TRIANGLES, 0, 6);
     glDrawElements(GL_TRIANGLES, NUMBER_OF_INDICES, GL_UNSIGNED_INT, nullptr);
     // glBindVertexArray(0); // INFO: No need to unbind it everytime
